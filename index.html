@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>idk</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #0a0a0a;
+    --fg: #e8e4df;
+    --dim: #4a4540;
+    --accent: #c4956a;
+    --grain-opacity: 0.035;
+  }
+
+  html, body {
+    height: 100%;
+    overflow: hidden;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: 'Instrument Serif', Georgia, serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+
+  /* film grain overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    pointer-events: none;
+    opacity: var(--grain-opacity);
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    background-size: 128px 128px;
+  }
+
+  /* ambient floating orb */
+  .orb {
+    position: fixed;
+    width: 500px;
+    height: 500px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(196, 149, 106, 0.06) 0%, transparent 70%);
+    pointer-events: none;
+    animation: drift 20s ease-in-out infinite;
+    z-index: 0;
+  }
+
+  .orb:nth-child(1) { top: -15%; left: -10%; animation-delay: 0s; }
+  .orb:nth-child(2) { bottom: -20%; right: -10%; animation-delay: -10s; animation-duration: 25s; }
+
+  @keyframes drift {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    25% { transform: translate(30px, -20px) scale(1.05); }
+    50% { transform: translate(-20px, 30px) scale(0.95); }
+    75% { transform: translate(15px, 15px) scale(1.02); }
+  }
+
+  .container {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3rem;
+    padding: 2rem;
+    max-width: 600px;
+    text-align: center;
+  }
+
+  h1 {
+    font-family: 'Space Mono', monospace;
+    font-size: clamp(3rem, 10vw, 5rem);
+    font-weight: 700;
+    letter-spacing: -0.04em;
+    color: var(--fg);
+    user-select: none;
+    line-height: 1;
+  }
+
+  .suggestion {
+    font-family: 'Instrument Serif', Georgia, serif;
+    font-size: clamp(1.4rem, 4vw, 2rem);
+    line-height: 1.4;
+    color: var(--fg);
+    min-height: 5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: none;
+  }
+
+  .suggestion.visible {
+    animation: materialize 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  .suggestion.exiting {
+    animation: dissolve 0.3s ease-out forwards;
+  }
+
+  @keyframes materialize {
+    0% {
+      opacity: 0;
+      transform: translateY(12px);
+      filter: blur(8px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+      filter: blur(0);
+    }
+  }
+
+  @keyframes dissolve {
+    0% {
+      opacity: 1;
+      transform: translateY(0);
+      filter: blur(0);
+    }
+    100% {
+      opacity: 0;
+      transform: translateY(-8px);
+      filter: blur(6px);
+    }
+  }
+
+  .btn {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.85rem;
+    letter-spacing: 0.15em;
+    text-transform: lowercase;
+    color: var(--dim);
+    background: transparent;
+    border: 1px solid var(--dim);
+    padding: 0.9rem 2.4rem;
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    position: relative;
+    overflow: hidden;
+    user-select: none;
+  }
+
+  .btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--accent);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    z-index: -1;
+  }
+
+  .btn:hover {
+    color: var(--bg);
+    border-color: var(--accent);
+  }
+
+  .btn:hover::before {
+    transform: scaleX(1);
+  }
+
+  .btn:active {
+    transform: scale(0.96);
+  }
+
+  .counter {
+    position: fixed;
+    bottom: 2rem;
+    right: 2.5rem;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--dim);
+    letter-spacing: 0.1em;
+    opacity: 0;
+    transition: opacity 0.6s ease;
+    z-index: 1;
+  }
+
+  .counter.visible {
+    opacity: 1;
+  }
+
+  .prompt {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--dim);
+    letter-spacing: 0.08em;
+    opacity: 0;
+    transition: opacity 1.5s ease;
+    margin-top: -1rem;
+  }
+
+  .prompt.visible {
+    opacity: 1;
+  }
+
+  /* keyboard hint */
+  .hint {
+    position: fixed;
+    bottom: 2rem;
+    left: 2.5rem;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--dim);
+    letter-spacing: 0.08em;
+    opacity: 0;
+    transition: opacity 0.6s ease;
+    z-index: 1;
+  }
+
+  .hint.visible {
+    opacity: 0.5;
+  }
+
+  @media (max-width: 480px) {
+    .container { gap: 2rem; }
+    .counter, .hint { bottom: 1.2rem; }
+    .counter { right: 1.5rem; }
+    .hint { left: 1.5rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="orb"></div>
+<div class="orb"></div>
+
+<div class="container">
+  <h1>idk</h1>
+  <p class="prompt" id="prompt">you don't have to know</p>
+  <div class="suggestion" id="suggestion"></div>
+  <button class="btn" id="btn" aria-label="Get a random suggestion">whatever</button>
+</div>
+
+<div class="counter" id="counter"></div>
+<div class="hint" id="hint">spacebar works too</div>
+
+<script>
+const suggestions = [
+  "Go sit somewhere you've never sat before.",
+  "Text someone you haven't talked to in a year.",
+  "Learn to pick a lock. Legally.",
+  "Write a letter to yourself ten years from now.",
+  "Build something with your hands that has no purpose.",
+  "Walk in one direction until something interesting happens.",
+  "Cook a meal from a country you can't find on a map.",
+  "Start a journal. Quit after three entries. That's fine.",
+  "Stare at the ceiling and think about what you actually want.",
+  "Adopt a houseplant. Name it.",
+  "Take a photo every day for a month. Never post them.",
+  "Learn three chords on a cheap guitar.",
+  "Build a website that does exactly one thing.",
+  "Read the Wikipedia page for a random year in history.",
+  "Go to a coffee shop and draw the first person you see.",
+  "Delete an app you open out of habit.",
+  "Write the worst possible opening line of a novel.",
+  "Learn to say 'I don't know' in twelve languages.",
+  "Sit in a parking lot and watch people. Not in a weird way.",
+  "Start a collection of something pointless.",
+  "Make a playlist for a version of you that doesn't exist yet.",
+  "Compliment a stranger. Mean it.",
+  "Sleep on the other side of the bed tonight.",
+  "Go to a bookstore and buy whatever your hand touches first.",
+  "Watch the sunrise. The whole thing. Don't take a photo.",
+  "Learn to fold one impressive origami thing.",
+  "Find your city's weirdest museum. Go.",
+  "Write down everything you're worried about. Throw it away.",
+  "Build a pillow fort. You're not too old.",
+  "Try to whistle a song you love. Badly.",
+  "Map out your neighborhood on paper from memory.",
+  "Eat somewhere that has no online reviews.",
+  "Make a zine about literally anything.",
+  "Listen to an entire album start to finish. No skipping.",
+  "Go to the library and wander until a book picks you.",
+  "Learn one magic trick well enough to fool someone.",
+  "Take the bus to the last stop. See what's there.",
+  "Reorganize a shelf by color. It won't fix your life but it looks nice.",
+  "Write a thank you note to someone who'll never expect it.",
+  "Try to remember your earliest memory. Write it down.",
+  "Find a hill. Roll down it.",
+  "Make a paper airplane. See how far it goes.",
+  "Pick a skill on YouTube. Give it exactly 20 minutes.",
+  "Go somewhere crowded and just... people watch.",
+  "Send yourself an email to open in six months.",
+  "Think of a question you've never googled. Google it.",
+  "Try to balance a spoon on your nose for five minutes.",
+  "Draw a map of everywhere you've ever lived.",
+  "Find a bench. Sit on it until you have one good idea.",
+  "Do absolutely nothing. On purpose. For thirty minutes.",
+  "Call someone instead of texting them.",
+  "Take a walk with no destination and no phone.",
+  "Learn to tie a knot you don't know.",
+  "Write a one-star review of your own life. Make it funny.",
+];
+
+const btn = document.getElementById('btn');
+const suggestionEl = document.getElementById('suggestion');
+const counterEl = document.getElementById('counter');
+const promptEl = document.getElementById('prompt');
+const hintEl = document.getElementById('hint');
+
+let count = 0;
+let lastIndex = -1;
+let isAnimating = false;
+
+const btnTexts = ['whatever', 'again', 'nah', 'next', 'meh', 'sure but also', 'one more', 'keep going', 'idk', 'try again', 'hmm'];
+
+function getRandomSuggestion() {
+  let index;
+  do {
+    index = Math.floor(Math.random() * suggestions.length);
+  } while (index === lastIndex && suggestions.length > 1);
+  lastIndex = index;
+  return suggestions[index];
+}
+
+function showSuggestion() {
+  if (isAnimating) return;
+  isAnimating = true;
+
+  // fade out prompt on first click
+  if (count === 0) {
+    promptEl.style.opacity = '0';
+    promptEl.style.transition = 'opacity 0.3s ease';
+  }
+
+  // if there's existing text, dissolve it first
+  if (suggestionEl.classList.contains('visible')) {
+    suggestionEl.classList.remove('visible');
+    suggestionEl.classList.add('exiting');
+
+    setTimeout(() => {
+      suggestionEl.classList.remove('exiting');
+      reveal();
+    }, 300);
+  } else {
+    reveal();
+  }
+
+  function reveal() {
+    count++;
+    suggestionEl.textContent = getRandomSuggestion();
+    suggestionEl.classList.add('visible');
+
+    // update counter
+    counterEl.textContent = String(count).padStart(3, '0');
+    counterEl.classList.add('visible');
+
+    // show keyboard hint after first click
+    if (count === 1) {
+      setTimeout(() => hintEl.classList.add('visible'), 1500);
+    }
+
+    // cycle button text
+    if (count > 0) {
+      btn.textContent = btnTexts[count % btnTexts.length];
+    }
+
+    setTimeout(() => { isAnimating = false; }, 500);
+  }
+}
+
+btn.addEventListener('click', showSuggestion);
+
+document.addEventListener('keydown', (e) => {
+  if (e.code === 'Space' || e.code === 'Enter') {
+    e.preventDefault();
+    showSuggestion();
+  }
+});
+
+// show the prompt after a beat
+setTimeout(() => promptEl.classList.add('visible'), 800);
+</script>
+
+</body>
+</html>
